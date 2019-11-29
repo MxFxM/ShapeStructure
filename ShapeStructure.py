@@ -39,15 +39,14 @@ def createShape():
     return points_list
 
 
-shape = createShape()
-
-
 def shapeReduction(s, e):
     """
     removes all corners from a shape s,
     that are closer than e from the line between its two neighbouring corners.
     this way the complexity of the shape can be reduced
     whille containing as much information as necessary.
+
+    https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
     """
     s = s.copy()
     # calculate distance between one point and its two neighbours
@@ -80,8 +79,57 @@ def shapeReduction(s, e):
     return s
 
 
+def incenterOfTriangle(pa, pb, pc):
+    """
+    when given 3 points that are corners of a triangle
+    this code calculates and returns the center of the triangle.
+    the exact type of center is called "incenter".
+    it is equidistant from all edges of the triangle.
+
+    https://en.wikipedia.org/wiki/Incenter
+    """
+    # get the length of the opposing line (point pa to point pb is length c)
+    a = math.sqrt((pb[0] - pc[0])**2 + (pb[1] - pc[1])**2)
+    b = math.sqrt((pa[0] - pc[0])**2 + (pa[1] - pc[1])**2)
+    c = math.sqrt((pb[0] - pa[0])**2 + (pb[1] - pa[1])**2)
+    x = (a * pa[0] + b * pb[0] + c * pc[0]) / (a + b + c)
+    y = (a * pa[1] + b * pb[1] + c * pc[1]) / (a + b + c)
+    return [x, y]
+
+
+def centeroidOfTriangle(pa, pb, pc):
+    """
+    when given 3 points that are corners of a triangle
+    this code calculates and returns the center of the triangle.
+    the exact type of center is called "centeroid".
+    it is the intersection point of the connection of each angle
+    to the middle of its opposed edge.
+    two of these connections are enough to get the intersection point.
+
+    https://en.wikipedia.org/wiki/Centroid
+    https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_the_equations_of_the_lines
+    """
+    # get the middle of the opposing line (point pa to point pb has middle cm)
+    am = [(pb[0] + pc[0]) / 2, (pb[1] + pc[1]) / 2]
+    bm = [(pa[0] + pc[0]) / 2, (pa[1] + pc[1]) / 2]
+    denominator = (pa[0] - am[0]) * (pb[1] - bm[1]) - \
+        (pa[1] - am[1]) * (pb[0] - bm[0])
+    x = ((pa[0] * am[1] - pa[1] * am[0]) * (pb[0] - bm[0]) -
+         (pa[0] - am[0]) * (pb[0] * bm[1] - pb[1] * bm[0])) / denominator
+    y = ((pa[0] * am[1] - pa[1] * am[0]) * (pb[1] - bm[1]) -
+         (pa[1] - am[1]) * (pb[0] * bm[1] - pb[1] * bm[0])) / denominator
+    return [x, y]
+
+
+shape = createShape()
+
 epsilon = 80
 reduced_shape = shapeReduction(shape, epsilon)
+
+triangle = [[500, 500], [600, 600], [900, 100]]
+center_of_triangle1 = incenterOfTriangle(triangle[0], triangle[1], triangle[2])
+center_of_triangle2 = centeroidOfTriangle(
+    triangle[0], triangle[1], triangle[2])
 
 while not done:
     for event in pygame.event.get():  # event handling
@@ -93,6 +141,12 @@ while not done:
     # lines between points and closed=True
     pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
     pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
+
+    pygame.draw.lines(gameDisplay, mc.color('red'), True, triangle)
+    pygame.draw.circle(gameDisplay, mc.color('white'), [
+                       round(p) for p in center_of_triangle1], 5)
+    pygame.draw.circle(gameDisplay, mc.color('light_blue'), [
+        round(p) for p in center_of_triangle2], 5)
 
     pygame.display.update()  # draw to screen
     clock.tick(60)  # limit at 60 fps
