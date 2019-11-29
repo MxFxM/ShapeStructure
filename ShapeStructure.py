@@ -25,6 +25,8 @@ while not done:
         elif event.type == pygame.KEYDOWN and event.key == 13:  # exit on enter
             done = True
 
+    pygame.draw.line(gameDisplay, white, [10, 10], [100, 500])  # draw line
+
     pygame.display.update()  # draw to screen
     clock.tick(60)  # limit at 60 fps
 
