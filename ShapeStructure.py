@@ -1,5 +1,7 @@
 import pygame
 
+import max_color as mc
+
 pygame.init()
 
 display_width = 800
@@ -7,14 +9,6 @@ display_height = 600
 
 gameDisplay = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('ShapeStructure')
-
-
-def max_color(col):
-    if col == 'black':
-        return (0, 0, 0)
-    if col == 'white':
-        return (255, 255, 255)
-
 
 clock = pygame.time.Clock()
 
@@ -32,7 +26,7 @@ while not done:
 
     # pygame.draw.line(gameDisplay, white, [10, 10], [100, 500])  # draw line
     # draw line
-    pygame.draw.lines(gameDisplay, max_color('white'), True, [
+    pygame.draw.lines(gameDisplay, mc.color('white'), True, [
                       [10, 10], [100, 500], [200, 50]])  # lines between points and closed=True
 
     pygame.display.update()  # draw to screen
