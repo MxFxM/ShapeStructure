@@ -121,6 +121,16 @@ def centeroidOfTriangle(pa, pb, pc):
     return [x, y]
 
 
+def pointInShape():
+    """
+    check wether a given point lies within the shape.
+    this is the problem known as point in polygon.
+
+    https://en.wikipedia.org/wiki/Point_in_polygon
+    """
+    return True
+
+
 shape = createShape()
 
 epsilon = 80
