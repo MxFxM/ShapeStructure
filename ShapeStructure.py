@@ -1,4 +1,5 @@
 import pygame
+import math
 
 import max_color as mc
 
@@ -40,6 +41,48 @@ def createShape():
 
 shape = createShape()
 
+
+def shapeReduction(s, e):
+    """
+    removes all corners from a shape s,
+    that are closer than e from the line between its two neighbouring corners.
+    this way the complexity of the shape can be reduced
+    whille containing as much information as necessary.
+    """
+    s = s.copy()
+    # calculate distance between one point and its two neighbours
+    distances = []
+    for n in range(len(s)):
+        # point of which the distance is to be calculated
+        x0 = s[n][0]
+        y0 = s[n][1]
+        # one point of the two defining the line
+        x1 = s[n - 1][0]
+        y1 = s[n - 1][1]
+        # one point of the two defining the line
+        if not n == len(s) - 1:
+            x2 = s[n + 1][0]
+            y2 = s[n + 1][1]
+        else:
+            x2 = s[0][0]
+            y2 = s[0][1]
+        # distance
+        distances.append(abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 *
+                             y1 - y2 * x1) / math.sqrt((y2 - y1)**2 + (x2 - x1)**2))
+    # find indexes, where distance is smaller then epsilon
+    indexes = []
+    for n, d in enumerate(distances):
+        if d < e:
+            indexes.append(n)
+    # remove those indexes from the shape
+    for index in reversed(indexes):
+        s.pop(index)
+    return s
+
+
+epsilon = 80
+reduced_shape = shapeReduction(shape, epsilon)
+
 while not done:
     for event in pygame.event.get():  # event handling
         if event.type == pygame.QUIT:  # exit on closing
@@ -49,6 +92,7 @@ while not done:
 
     # lines between points and closed=True
     pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
+    pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
 
     pygame.display.update()  # draw to screen
     clock.tick(60)  # limit at 60 fps
