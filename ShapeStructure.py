@@ -173,10 +173,59 @@ def pointInShape(s, p):
     return True
 
 
+def shapeStructure(s):
+    s = s.copy()
+    """
+    for every vertex,
+    get distance to line between neighbouring vertices.
+    this is similar to shape reduction.
+    """
+    distances = []
+    for n in range(len(s)):
+        # point of which the distance is to be calculated
+        x0 = s[n][0]
+        y0 = s[n][1]
+        # one point of the two defining the line
+        x1 = s[n - 1][0]
+        y1 = s[n - 1][1]
+        # one point of the two defining the line
+        if not n == len(s) - 1:
+            x2 = s[n + 1][0]
+            y2 = s[n + 1][1]
+        else:
+            x2 = s[0][0]
+            y2 = s[0][1]
+        # distance
+        distances.append(distanceLineToPoint(x1, y1, x2, y2, x0, y0))
+    """
+    when line is outside of shape, ignore line.
+    for the check, the center of the line is used.
+    """
+    indexes = []
+    for n in range(len(s)):
+        # one point of the two defining the line
+        x1 = s[n - 1][0]
+        y1 = s[n - 1][1]
+        # one point of the two defining the line
+        if not n == len(s) - 1:
+            x2 = s[n + 1][0]
+            y2 = s[n + 1][1]
+        else:
+            x2 = s[0][0]
+            y2 = s[0][1]
+        center = [(x1 + x2) / 2, (y1 + y2) / 2]
+        if not pointInShape(s, center):
+            indexes.append(n)
+    for index in reversed(indexes):
+        s.pop(index)  # 'ignored' vertices are poped, which isnt right for later
+    return s
+
+
 shape = createShape()
 
 epsilon = 80
 reduced_shape = shapeReduction(shape, epsilon)
+structured_shape = shapeStructure(shape)
 
 triangle = [[500, 500], [600, 600], [900, 100]]
 center_of_triangle1 = incenterOfTriangle(triangle[0], triangle[1], triangle[2])
@@ -192,6 +241,7 @@ while not done:
 
     # lines between points and closed=True
     pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
+    pygame.draw.lines(gameDisplay, mc.color('blue'), True, structured_shape)
 
     """
     for x in range(150, 550):
@@ -200,7 +250,7 @@ while not done:
                 pygame.draw.circle(gameDisplay, mc.color('green'), [x, y], 0)
             else:
                 pygame.draw.circle(gameDisplay, mc.color('red'), [x, y], 0)
-        """
+    """
 
     pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
 
