@@ -39,6 +39,10 @@ def createShape():
     return points_list
 
 
+def distanceLineToPoint(line_x1, line_y1, line_x2, line_y2, point_x, point_y):
+    return abs((line_y2 - line_y1) * point_x - (line_x2 - line_x1) * point_y + line_x2 * line_y1 - line_y2 * line_x1) / math.sqrt((line_y2 - line_y1)**2 + (line_x2 - line_x1)**2)
+
+
 def shapeReduction(s, e):
     """
     removes all corners from a shape s,
@@ -66,8 +70,7 @@ def shapeReduction(s, e):
             x2 = s[0][0]
             y2 = s[0][1]
         # distance
-        distances.append(abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 *
-                             y1 - y2 * x1) / math.sqrt((y2 - y1)**2 + (x2 - x1)**2))
+        distances.append(distanceLineToPoint(x1, y1, x2, y2, x0, y0))
     # find indexes, where distance is smaller then epsilon
     indexes = []
     for n, d in enumerate(distances):
@@ -190,18 +193,20 @@ while not done:
     # lines between points and closed=True
     pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
 
+    """
     for x in range(150, 550):
         for y in range(50, 650):
             if pointInShape(shape, [x, y]):
                 pygame.draw.circle(gameDisplay, mc.color('green'), [x, y], 0)
             else:
                 pygame.draw.circle(gameDisplay, mc.color('red'), [x, y], 0)
+        """
 
     pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
 
     pygame.draw.lines(gameDisplay, mc.color('red'), True, triangle)
     pygame.draw.circle(gameDisplay, mc.color('white'), [
-                       round(p) for p in center_of_triangle1], 5)
+        round(p) for p in center_of_triangle1], 5)
     pygame.draw.circle(gameDisplay, mc.color('light_blue'), [
         round(p) for p in center_of_triangle2], 5)
 
