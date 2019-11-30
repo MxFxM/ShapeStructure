@@ -121,14 +121,77 @@ def centeroidOfTriangle(pa, pb, pc):
     return [x, y]
 
 
-def pointInShape():
+def crossProductTest(xA, yA, xB, yB, xC, yC):
     """
-    check wether a given point lies within the shape.
+    this test is necessary for point in shape.
+
+    https://de.wikipedia.org/wiki/Punkt-in-Polygon-Test_nach_Jordan
+    """
+    if yB > yC:
+        xTemp = xB
+        yTemp = yB
+        xB = xC
+        yB = yC
+        xC = xTemp
+        yC = yTemp
+    if yA < yB or yA > yC:
+        return 1
+    delta = (xB - xA) * (yC - yA) - (yB - yA) * (xC - xA)
+    if delta > 0:
+        return 1
+    elif delta < 0:
+        return -1
+    return 0
+
+
+def pointInShape(s, p):
+    """
+    check wether a given point p lies within the shape s.
     this is the problem known as point in polygon.
+    to do so it counts the intersections of a ray going out of the point
+    towards the upper left corner.
+    if the number of intersections is even, the point is on the outside.
+    if its odd, the point is on the inside.
 
     https://en.wikipedia.org/wiki/Point_in_polygon
     """
+    """
+    count = 0
+    for n in range(len(s)):
+        x3 = s[n - 1][0]
+        y3 = s[n - 1][1]
+        x4 = s[n][0]
+        y4 = s[n][1]
+        denominator = p[0] * (y3 - y4) - p[1] * (x3 - x4)
+        if not denominator == 0:
+            t = ((p[0] - x3) * (y3 - y4) - (p[1] - y3)
+                 * (x3 - x4)) / denominator
+            u = (p[0] * (p[1] - y3) - p[1] * (p[0] - x3)) / denominator
+            if t >= 0 and t <= 1 and u >= 0 and u <= 1:
+                count = count + 1
+    if count % 2 == 0:
+        return False
     return True
+    """
+    t = -1
+    for n in range(len(s)):
+        t = t * crossProductTest(p[0], p[1], s[n - 1]
+                                 [0], s[n - 1][1], s[n][0], s[n][1])
+        if t == 0:
+            break
+    # handle point on height of corner
+    #once = False
+    # for n in range(len(s)):
+    #    if s[n][1] == p[1] and s[n][0] < p[0]:
+    #        #t = t * -1
+    #        once = True
+    # if once:
+    #    t = t * -1
+    if t > 0:
+        return True
+    if t < 0:
+        return False
+    return True  # lies on top of polygon, handle as you wish
 
 
 shape = createShape()
@@ -151,6 +214,15 @@ while not done:
     # lines between points and closed=True
     pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
     pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
+
+    """
+    for x in range(50, 500):
+        for y in range(50, 650):
+            if pointInShape(shape, [x, y]):
+                pygame.draw.circle(gameDisplay, mc.color('green'), [x, y], 1)
+            else:
+                pygame.draw.circle(gameDisplay, mc.color('red'), [x, y], 1)
+    """
 
     pygame.draw.lines(gameDisplay, mc.color('red'), True, triangle)
     pygame.draw.circle(gameDisplay, mc.color('white'), [
