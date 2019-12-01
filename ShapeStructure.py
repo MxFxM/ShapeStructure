@@ -174,14 +174,26 @@ def pointInShape(s, p):
     return True
 
 
+def get_distance_information(element):
+    return element[6]
+
+
 def shapeStructure(s):
-    s = s.copy()
-    """
-    for every vertex,
-    get distance to line between neighbouring vertices.
-    this is similar to shape reduction.
-    """
-    distances = []
+    # build a copy of the shape with additional information
+    shape_information = []
+    # 0: vertex x
+    # 1: vertex y
+    # 2: previous vertex x
+    # 3: previous vertex y
+    # 4: next vertex x
+    # 5: next vertex y
+    # 6: distance between vertex and line between previous and next
+    # 7: wether the line between previous and next lies inside the shape
+    # 8: wether the vertex was already handled
+
+    # found triangles are saved here
+    triangles = []
+
     for n in range(len(s)):
         # point of which the distance is to be calculated
         x0 = s[n][0]
@@ -196,42 +208,50 @@ def shapeStructure(s):
         else:
             x2 = s[0][0]
             y2 = s[0][1]
+
         # distance
-        distances.append(distanceLineToPoint(x1, y1, x2, y2, x0, y0))
-    """
-    when line is outside of shape, ignore line.
-    for the check, the center of the line is used.
-    """
-    indexes = []
-    for n in range(len(s)):
-        # one point of the two defining the line
-        x1 = s[n - 1][0]
-        y1 = s[n - 1][1]
-        # one point of the two defining the line
-        if not n == len(s) - 1:
-            x2 = s[n + 1][0]
-            y2 = s[n + 1][1]
-        else:
-            x2 = s[0][0]
-            y2 = s[0][1]
+        distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
+
+        # is line in shape?
         center = [(x1 + x2) / 2, (y1 + y2) / 2]
-        if not pointInShape(s, center):
-            indexes.append(n)
-    """
-    find vertex with shortest distance.
-    do not use ignored vertices.
-    """
-    for index in reversed(indexes):
-        s.pop(index)  # 'ignored' vertices are poped, which isnt right for later
-        distances.pop(index)
-    shortest = np.argmax(np.array(distances))
-    """
-    mark and store center of the vertex
-    and the line between its neighbours.
-    """
-    # maybee keep all vertices in a dataframe or somthing?!
-    # s[shortest] but then the neighbours might have been popped...
-    return s
+        line_in_shape = pointInShape(s, center)
+
+        shape_information.append(
+            [x0, y0, x1, y1, x2, y2, distance, line_in_shape, not line_in_shape])
+
+    shape_information.sort(key=get_distance_information)
+
+    while len([si for si in shape_information if not si[8]]) > 3:
+        for n, vertex in enumerate(shape_information):
+            if not vertex[8]:
+                if vertex[7]:
+                    tri_center = centeroidOfTriangle([vertex[0], vertex[1]], [
+                        vertex[2], vertex[3]], [vertex[4], vertex[5]])
+                    triangles.append([vertex[0], vertex[1], vertex[2], vertex[3],
+                                      vertex[4], vertex[5], tri_center[0], tri_center[1]])
+                    for m, other_vertex in enumerate(shape_information):
+                        # this works, but then all distances and in-shape values have to be calculated again (in the new shape!!)
+                        pass
+                        """
+                        if n != m:  # replace the vertex in other vertices
+                            if vertex[0] == other_vertex[2] and vertex[1] == other_vertex[3]:
+                                other_vertex[2] = vertex[2]
+                                other_vertex[3] = vertex[3]
+                            elif vertex[0] == other_vertex[4] and vertex[1] == other_vertex[5]:
+                                other_vertex[4] = vertex[4]
+                                other_vertex[5] = vertex[5]
+                        """
+                    vertex[8] = True  # is now handled
+                    break
+
+    print(np.array(triangles))
+
+    for tri in triangles:
+        pygame.draw.lines(gameDisplay, mc.color('red'), True, [
+                          [tri[0], tri[1]], [tri[2], tri[3]], [tri[4], tri[5]]])
+
+    line = [[vertex[2], vertex[3]], [vertex[4], vertex[5]]]
+    return line
 
 
 shape = createShape()
@@ -253,7 +273,7 @@ while not done:
             done = True
 
     # lines between points and closed=True
-    pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
+    # pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
     pygame.draw.lines(gameDisplay, mc.color('blue'), True, structured_shape)
 
     """
