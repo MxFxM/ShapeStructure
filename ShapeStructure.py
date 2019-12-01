@@ -1,5 +1,6 @@
 import pygame
 import math
+import numpy as np
 
 import max_color as mc
 
@@ -216,8 +217,20 @@ def shapeStructure(s):
         center = [(x1 + x2) / 2, (y1 + y2) / 2]
         if not pointInShape(s, center):
             indexes.append(n)
+    """
+    find vertex with shortest distance.
+    do not use ignored vertices.
+    """
     for index in reversed(indexes):
         s.pop(index)  # 'ignored' vertices are poped, which isnt right for later
+        distances.pop(index)
+    shortest = np.argmax(np.array(distances))
+    """
+    mark and store center of the vertex
+    and the line between its neighbours.
+    """
+    # maybee keep all vertices in a dataframe or somthing?!
+    # s[shortest] but then the neighbours might have been popped...
     return s
 
 
