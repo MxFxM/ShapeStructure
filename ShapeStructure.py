@@ -179,6 +179,7 @@ def get_distance_information(element):
 
 
 def shapeStructure(s):
+    s = s.copy()
     # build a copy of the shape with additional information
     shape_information = []
     # 0: vertex x
@@ -194,34 +195,55 @@ def shapeStructure(s):
     # found triangles are saved here
     triangles = []
 
-    for n in range(len(s)):
-        # point of which the distance is to be calculated
-        x0 = s[n][0]
-        y0 = s[n][1]
-        # one point of the two defining the line
-        x1 = s[n - 1][0]
-        y1 = s[n - 1][1]
-        # one point of the two defining the line
-        if not n == len(s) - 1:
-            x2 = s[n + 1][0]
-            y2 = s[n + 1][1]
-        else:
-            x2 = s[0][0]
-            y2 = s[0][1]
+    while True:
+        force_end = False
+        shape_information = []
 
-        # distance
-        distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
+        for n in range(len(s)):
+            # point of which the distance is to be calculated
+            x0 = s[n][0]
+            y0 = s[n][1]
+            # one point of the two defining the line
+            x1 = s[n - 1][0]
+            y1 = s[n - 1][1]
+            # one point of the two defining the line
+            if not n == len(s) - 1:
+                x2 = s[n + 1][0]
+                y2 = s[n + 1][1]
+            else:
+                x2 = s[0][0]
+                y2 = s[0][1]
 
-        # is line in shape?
-        center = [(x1 + x2) / 2, (y1 + y2) / 2]
-        line_in_shape = pointInShape(s, center)
+            # distance
+            try:
+                distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
+            except Exception as e:
+                print(e)
+                foce_end = True
 
-        shape_information.append(
-            [x0, y0, x1, y1, x2, y2, distance, line_in_shape, not line_in_shape])
+            # is line in shape?
+            center = [(x1 + x2) / 2, (y1 + y2) / 2]
+            line_in_shape = pointInShape(s, center)
 
-    shape_information.sort(key=get_distance_information)
+            if line_in_shape:
+                shape_information.append(
+                    [x0, y0, x1, y1, x2, y2, distance, line_in_shape, not line_in_shape])
 
+        shape_information.sort(key=get_distance_information)
+        vertex = shape_information[0]
+        tri_center = centeroidOfTriangle([vertex[0], vertex[1]], [
+            vertex[2], vertex[3]], [vertex[4], vertex[5]])
+        triangles.append([vertex[0], vertex[1], vertex[2], vertex[3],
+                          vertex[4], vertex[5], tri_center[0], tri_center[1]])
+        for m, spart in enumerate(s):
+            if spart[0] == vertex[0] and spart[1] == vertex[1]:
+                s.pop(m)
+        if len(shape_information) < 2 or force_end:
+            break
+
+    """
     while len([si for si in shape_information if not si[8]]) > 3:
+
         for n, vertex in enumerate(shape_information):
             if not vertex[8]:
                 if vertex[7]:
@@ -229,10 +251,11 @@ def shapeStructure(s):
                         vertex[2], vertex[3]], [vertex[4], vertex[5]])
                     triangles.append([vertex[0], vertex[1], vertex[2], vertex[3],
                                       vertex[4], vertex[5], tri_center[0], tri_center[1]])
+
                     for m, other_vertex in enumerate(shape_information):
                         # this works, but then all distances and in-shape values have to be calculated again (in the new shape!!)
                         pass
-                        """
+
                         if n != m:  # replace the vertex in other vertices
                             if vertex[0] == other_vertex[2] and vertex[1] == other_vertex[3]:
                                 other_vertex[2] = vertex[2]
@@ -240,15 +263,30 @@ def shapeStructure(s):
                             elif vertex[0] == other_vertex[4] and vertex[1] == other_vertex[5]:
                                 other_vertex[4] = vertex[4]
                                 other_vertex[5] = vertex[5]
-                        """
-                    vertex[8] = True  # is now handled
-                    break
 
-    print(np.array(triangles))
+                    vertex[8] = True  # is now handled
+                    shape_information.pop(n)
+
+                    for other_vertex in shape_information:
+                        # distance
+                        other_vertex[6] = distanceLineToPoint(
+                            other_vertex[2], other_vertex[3], other_vertex[4], other_vertex[5], other_vertex[0], other_vertex[1])
+
+                        # is line in shape?
+                        center = [(other_vertex[2] + other_vertex[4]) / 2,
+                                  (other_vertex[3] + other_vertex[5]) / 2]
+                        other_vertex[7] = pointInShape(s, center)
+
+                    break
+    """
+
+    # print(np.array(triangles))
 
     for tri in triangles:
-        pygame.draw.lines(gameDisplay, mc.color('red'), True, [
-                          [tri[0], tri[1]], [tri[2], tri[3]], [tri[4], tri[5]]])
+        pygame.draw.lines(gameDisplay,
+                          mc.color('red'),
+                          True,
+                          [[tri[0], tri[1]], [tri[2], tri[3]], [tri[4], tri[5]]])
 
     line = [[vertex[2], vertex[3]], [vertex[4], vertex[5]]]
     return line
@@ -275,6 +313,7 @@ while not done:
     # lines between points and closed=True
     # pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
     pygame.draw.lines(gameDisplay, mc.color('blue'), True, structured_shape)
+    # pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
 
     """
     for x in range(150, 550):
@@ -285,13 +324,11 @@ while not done:
                 pygame.draw.circle(gameDisplay, mc.color('red'), [x, y], 0)
     """
 
-    pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
-
-    pygame.draw.lines(gameDisplay, mc.color('red'), True, triangle)
-    pygame.draw.circle(gameDisplay, mc.color('white'), [
-        round(p) for p in center_of_triangle1], 5)
-    pygame.draw.circle(gameDisplay, mc.color('light_blue'), [
-        round(p) for p in center_of_triangle2], 5)
+    # pygame.draw.lines(gameDisplay, mc.color('red'), True, triangle)
+    # pygame.draw.circle(gameDisplay, mc.color('white'), [
+    #    round(p) for p in center_of_triangle1], 5)
+    # pygame.draw.circle(gameDisplay, mc.color('light_blue'), [
+    #    round(p) for p in center_of_triangle2], 5)
 
     pygame.display.update()  # draw to screen
     clock.tick(60)  # limit at 60 fps
