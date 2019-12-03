@@ -118,10 +118,15 @@ def centeroidOfTriangle(pa, pb, pc):
     bm = [(pa[0] + pc[0]) / 2, (pa[1] + pc[1]) / 2]
     denominator = (pa[0] - am[0]) * (pb[1] - bm[1]) - \
         (pa[1] - am[1]) * (pb[0] - bm[0])
-    x = ((pa[0] * am[1] - pa[1] * am[0]) * (pb[0] - bm[0]) -
-         (pa[0] - am[0]) * (pb[0] * bm[1] - pb[1] * bm[0])) / denominator
-    y = ((pa[0] * am[1] - pa[1] * am[0]) * (pb[1] - bm[1]) -
-         (pa[1] - am[1]) * (pb[0] * bm[1] - pb[1] * bm[0])) / denominator
+    if denominator != 0:
+        x = ((pa[0] * am[1] - pa[1] * am[0]) * (pb[0] - bm[0]) -
+             (pa[0] - am[0]) * (pb[0] * bm[1] - pb[1] * bm[0])) / denominator
+        y = ((pa[0] * am[1] - pa[1] * am[0]) * (pb[1] - bm[1]) -
+             (pa[1] - am[1]) * (pb[0] * bm[1] - pb[1] * bm[0])) / denominator
+    else:
+        print(f"cant find center for {pa}, {pb}, {pc}")
+        x = pa[0]
+        y = pa[1]
     return [x, y]
 
 
@@ -182,7 +187,11 @@ def shapeStructure(s, pattern='flattest'):
     """
     there are different patterns useable to create the triangles.
     flattest: the one, where the vertex is the smallest distance away from the line between its neighbours
+    highest
     shortest: the one, where the circumference is the shortest
+    longest
+    smallest: the one, where the area enclosed by the triangle is the smallest
+    largest
     """
     len_limit = 0
 
@@ -226,14 +235,20 @@ def shapeStructure(s, pattern='flattest'):
                 distance = 0
                 if pattern == 'flattest':
                     distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
-                    len_limit = 2
+                    len_limit = 2  # distance is height
+                if pattern == 'smallest':
+                    distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
+                    distance = distance * \
+                        math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+                    distance = distance / 2
+                    len_limit = 2  # distance is area
                 if pattern == 'shortest':
                     distance = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
                     distance = distance + \
                         math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
                     distance = distance + \
                         math.sqrt((x2 - x0)**2 + (y2 - y0)**2)
-                    len_limit = 3
+                    len_limit = 3  # distance is circumference
                 # print(distance)
             except Exception as e:
                 print(e)
@@ -310,7 +325,7 @@ shape = createShape()
 
 epsilon = 80
 reduced_shape = shapeReduction(shape, epsilon)
-structured_shape = shapeStructure(shape, 'shortest')
+structured_shape = shapeStructure(shape, 'smallest')
 
 triangle = [[500, 500], [600, 600], [900, 100]]
 center_of_triangle1 = incenterOfTriangle(triangle[0], triangle[1], triangle[2])
