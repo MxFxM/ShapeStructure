@@ -3,7 +3,11 @@ import numpy as np
 """
 this holds my shape functions.
 - create a sample shape
+- calculate the distance between a line and a point
 - reduce vertex count of a shape
+- find the incenter of a triangle
+- find the centeroid of a triangle
+- check wether a point lies within a shape
 - calculate structure of a shape
 """
 
