@@ -1,2 +1,2 @@
 # ShapeStructure
-Extractes structure of a given shape
+Extracts structure of a given shape
