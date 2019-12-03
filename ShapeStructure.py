@@ -192,8 +192,15 @@ def shapeStructure(s, pattern='flattest'):
     longest
     smallest: the one, where the area enclosed by the triangle is the smallest
     largest
+
+    TODO:
+    smallest is bugged
+    longest is bugged
+    highest is bugged
+    largest is bugged
     """
     len_limit = 0
+    reverse = False
 
     s = s.copy()
     # build a copy of the shape with additional information
@@ -233,22 +240,28 @@ def shapeStructure(s, pattern='flattest'):
             # distance
             try:
                 distance = 0
-                if pattern == 'flattest':
+                if pattern == 'flattest' or pattern == 'highest':
                     distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
                     len_limit = 2  # distance is height
-                if pattern == 'smallest':
+                    if pattern == 'highest':
+                        reverse = True
+                if pattern == 'smallest' or pattern == 'largest':
                     distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
                     distance = distance * \
                         math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
                     distance = distance / 2
                     len_limit = 2  # distance is area
-                if pattern == 'shortest':
+                    if pattern == 'largest':
+                        reverse = True
+                if pattern == 'shortest' or pattern == 'longest':
                     distance = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
                     distance = distance + \
                         math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
                     distance = distance + \
                         math.sqrt((x2 - x0)**2 + (y2 - y0)**2)
                     len_limit = 3  # distance is circumference
+                    if pattern == 'longest':
+                        reverse = True
                 # print(distance)
             except Exception as e:
                 print(e)
@@ -262,7 +275,7 @@ def shapeStructure(s, pattern='flattest'):
                 shape_information.append(
                     [x0, y0, x1, y1, x2, y2, distance, line_in_shape, not line_in_shape])
 
-        shape_information.sort(key=get_distance_information)
+        shape_information.sort(key=get_distance_information, reverse=reverse)
         vertex = shape_information[0]
         tri_center = centeroidOfTriangle([vertex[0], vertex[1]], [
             vertex[2], vertex[3]], [vertex[4], vertex[5]])
@@ -325,7 +338,7 @@ shape = createShape()
 
 epsilon = 80
 reduced_shape = shapeReduction(shape, epsilon)
-structured_shape = shapeStructure(shape, 'smallest')
+structured_shape = shapeStructure(shape, 'shortest')
 
 triangle = [[500, 500], [600, 600], [900, 100]]
 center_of_triangle1 = incenterOfTriangle(triangle[0], triangle[1], triangle[2])
