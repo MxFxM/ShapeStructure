@@ -242,54 +242,50 @@ def shapeStructure(s):
             break
 
     """
-    while len([si for si in shape_information if not si[8]]) > 3:
-
-        for n, vertex in enumerate(shape_information):
-            if not vertex[8]:
-                if vertex[7]:
-                    tri_center = centeroidOfTriangle([vertex[0], vertex[1]], [
-                        vertex[2], vertex[3]], [vertex[4], vertex[5]])
-                    triangles.append([vertex[0], vertex[1], vertex[2], vertex[3],
-                                      vertex[4], vertex[5], tri_center[0], tri_center[1]])
-
-                    for m, other_vertex in enumerate(shape_information):
-                        # this works, but then all distances and in-shape values have to be calculated again (in the new shape!!)
-                        pass
-
-                        if n != m:  # replace the vertex in other vertices
-                            if vertex[0] == other_vertex[2] and vertex[1] == other_vertex[3]:
-                                other_vertex[2] = vertex[2]
-                                other_vertex[3] = vertex[3]
-                            elif vertex[0] == other_vertex[4] and vertex[1] == other_vertex[5]:
-                                other_vertex[4] = vertex[4]
-                                other_vertex[5] = vertex[5]
-
-                    vertex[8] = True  # is now handled
-                    shape_information.pop(n)
-
-                    for other_vertex in shape_information:
-                        # distance
-                        other_vertex[6] = distanceLineToPoint(
-                            other_vertex[2], other_vertex[3], other_vertex[4], other_vertex[5], other_vertex[0], other_vertex[1])
-
-                        # is line in shape?
-                        center = [(other_vertex[2] + other_vertex[4]) / 2,
-                                  (other_vertex[3] + other_vertex[5]) / 2]
-                        other_vertex[7] = pointInShape(s, center)
-
-                    break
-    """
-
-    # print(np.array(triangles))
-
     for tri in triangles:
         pygame.draw.lines(gameDisplay,
                           mc.color('red'),
                           True,
                           [[tri[0], tri[1]], [tri[2], tri[3]], [tri[4], tri[5]]])
+    """
+
+    lines = []
+
+    for n, tri in enumerate(triangles):
+        for m, other_tri in enumerate(triangles):
+            if n != m:  # check other triangle
+                common_corner_count = 0
+                neighbour = False
+                if tri[0] == other_tri[0] and tri[1] == other_tri[1]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+                elif tri[0] == other_tri[2] and tri[1] == other_tri[3]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+                elif tri[0] == other_tri[4] and tri[1] == other_tri[5]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+
+                if tri[2] == other_tri[0] and tri[3] == other_tri[1]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+                elif tri[2] == other_tri[2] and tri[3] == other_tri[3]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+                elif tri[2] == other_tri[4] and tri[3] == other_tri[5]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+
+                if tri[4] == other_tri[0] and tri[5] == other_tri[1]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+                elif tri[4] == other_tri[2] and tri[5] == other_tri[3]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+                elif tri[4] == other_tri[4] and tri[5] == other_tri[5]:  # one shared corner
+                    common_corner_count = common_corner_count + 1
+
+                print(n, m, common_corner_count, tri, other_tri)
+                if common_corner_count >= 2:
+                    lines.append(
+                        [[round(tri[6]), round(tri[7])], [round(other_tri[6]), round(other_tri[7])]])
+
+    print(lines)
 
     line = [[vertex[2], vertex[3]], [vertex[4], vertex[5]]]
-    return line
+    return lines
 
 
 shape = createShape()
@@ -312,23 +308,12 @@ while not done:
 
     # lines between points and closed=True
     # pygame.draw.lines(gameDisplay, mc.color('green'), True, reduced_shape)
-    pygame.draw.lines(gameDisplay, mc.color('blue'), True, structured_shape)
-    # pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
+    # pygame.draw.lines(gameDisplay, mc.color('blue'), True, structured_shape)
+    pygame.draw.lines(gameDisplay, mc.color('light_blue'), True, shape)
 
-    """
-    for x in range(150, 550):
-        for y in range(50, 650):
-            if pointInShape(shape, [x, y]):
-                pygame.draw.circle(gameDisplay, mc.color('green'), [x, y], 0)
-            else:
-                pygame.draw.circle(gameDisplay, mc.color('red'), [x, y], 0)
-    """
-
-    # pygame.draw.lines(gameDisplay, mc.color('red'), True, triangle)
-    # pygame.draw.circle(gameDisplay, mc.color('white'), [
-    #    round(p) for p in center_of_triangle1], 5)
-    # pygame.draw.circle(gameDisplay, mc.color('light_blue'), [
-    #    round(p) for p in center_of_triangle2], 5)
+    for line in structured_shape:
+        pygame.draw.line(gameDisplay, mc.color(
+            'green'), line[0], line[1])
 
     pygame.display.update()  # draw to screen
     clock.tick(60)  # limit at 60 fps
