@@ -178,7 +178,14 @@ def get_distance_information(element):
     return element[6]
 
 
-def shapeStructure(s):
+def shapeStructure(s, pattern='flattest'):
+    """
+    there are different patterns useable to create the triangles.
+    flattest: the one, where the vertex is the smallest distance away from the line between its neighbours
+    shortest: the one, where the circumference is the shortest
+    """
+    len_limit = 0
+
     s = s.copy()
     # build a copy of the shape with additional information
     shape_information = []
@@ -216,7 +223,18 @@ def shapeStructure(s):
 
             # distance
             try:
-                distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
+                distance = 0
+                if pattern == 'flattest':
+                    distance = distanceLineToPoint(x1, y1, x2, y2, x0, y0)
+                    len_limit = 2
+                if pattern == 'shortest':
+                    distance = math.sqrt((x0 - x1)**2 + (y0 - y1)**2)
+                    distance = distance + \
+                        math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+                    distance = distance + \
+                        math.sqrt((x2 - x0)**2 + (y2 - y0)**2)
+                    len_limit = 3
+                # print(distance)
             except Exception as e:
                 print(e)
                 foce_end = True
@@ -238,7 +256,7 @@ def shapeStructure(s):
         for m, spart in enumerate(s):
             if spart[0] == vertex[0] and spart[1] == vertex[1]:
                 s.pop(m)
-        if len(shape_information) < 2 or force_end:
+        if len(shape_information) < len_limit or force_end:
             break
 
     """
@@ -277,12 +295,12 @@ def shapeStructure(s):
                 elif tri[4] == other_tri[4] and tri[5] == other_tri[5]:  # one shared corner
                     common_corner_count = common_corner_count + 1
 
-                print(n, m, common_corner_count, tri, other_tri)
+                # print(n, m, common_corner_count, tri, other_tri)
                 if common_corner_count >= 2:
                     lines.append(
                         [[round(tri[6]), round(tri[7])], [round(other_tri[6]), round(other_tri[7])]])
 
-    print(lines)
+    # print(lines)
 
     line = [[vertex[2], vertex[3]], [vertex[4], vertex[5]]]
     return lines
@@ -292,7 +310,7 @@ shape = createShape()
 
 epsilon = 80
 reduced_shape = shapeReduction(shape, epsilon)
-structured_shape = shapeStructure(shape)
+structured_shape = shapeStructure(shape, 'shortest')
 
 triangle = [[500, 500], [600, 600], [900, 100]]
 center_of_triangle1 = incenterOfTriangle(triangle[0], triangle[1], triangle[2])
