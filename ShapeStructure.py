@@ -25,12 +25,15 @@ def update_shape(pos):
             if distance(vertex, pos) <= 20:
                 shape[n] = [pos[0], pos[1]]
                 locked_vertex = n
-                print("moved")
+                # print("moved")
                 break
     else:
         shape[locked_vertex] = [pos[0], pos[1]]
 
-    structured_shape = max_shape.shapeStructure(shape, 'shortest')
+    try:
+        structured_shape = max_shape.shapeStructure(shape, 'shortest')
+    except Exception as e:
+        print("Cannot calculate structure of this shape.")
 
 
 def mousePressed(pos):
